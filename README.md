@@ -1,4 +1,4 @@
-# SETI Intelligence Prototype
+# Intelligence Prototype
 
 This repository contains a research-engineering prototype for technosignature search in radio astronomy data.
 
