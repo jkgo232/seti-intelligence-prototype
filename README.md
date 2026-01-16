@@ -10,7 +10,7 @@ This repository implements a toy-model of a pipeline for detecting, ranking, and
 
 The pipeline consists of four main stages:
 
-1. Tiling and Preprocessing: Large dynamic spectra are divided into fixed-size time–frequency tiles.
+1. Tiling and Preprocessing: Large spectra are divided into fixed-size time–frequency tiles.
 2. CNN Training with Synthetic Injections: A convolutional neural network is trained to identify anomalous tiles using injected drifting narrowband signals.
 3. CNN Scoring of New Data: The trained CNN scores unseen tiles and ranks them by anomaly likelihood.
 4. LLM-Based Evaluation and Interpretation: Top-ranked tiles are summarized via scalar features and evaluated by LLMs (chatgpt or local models).
@@ -83,7 +83,7 @@ The trained CNN is applied to unseen tiles using: python scripts/score\_tiles.py
 
 Outputs:
 scored\_tiles.json
-→ Top-K tiles with CNN score + scalar features (no labels)
+→ Top-50 tiles with CNN score and scalar features (no labels)
 
 scored\_tiles\_inj.json
 → Same tiles with private injection metadata for validation
@@ -118,7 +118,7 @@ Likely RFI or Noise / artifact
 
 2. Provide a short explanation
 
-Supported LLMs:  ChatGPT (OpenAI API), Qwen (in progress)
+Supported LLMs:  ChatGPT (OpenAI API), Qwen
 
 Evaluation Metrics: Consistency (repeat prompts), Agreement with heuristic rules, Explanation completeness
 
@@ -144,7 +144,15 @@ Injected tiles are labeled as likely technosignatures; others as RFI/noise for f
 
 
 
-\##Visualization:
+\##Visualization (examples saved in \\figures\\):
 
-Feature distributions and clustering are visualized with: Injected vs non-injected tiles, Feature vs CNN score, Color-coded injection recovery
+Raw and processed waterfall and spectra are plotted and saved
+
+Tiles are validated by random visual inspection and injected signals are plotted before and after injection
+
+Feature distributions and clustering are visualized with: Injected vs non-injected tiles, Feature vs CNN score, Color-coded injection recovery, 1D and 2D distributions
+
+
+
+
 
