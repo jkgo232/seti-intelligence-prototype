@@ -1,18 +1,18 @@
-\# Methods
+## Methods
 
 
 
-\## Overview
+## Overview
 
 
 
 The goal is to build a toy-model that takes raw telescope data and converts it into reproducible, multi-modal datasets and analyzes these using a combination of classical signal processing, machine learning, and large language models (LLMs).
 
----
+--
 
 
 
-\## Data Sources
+## Data Sources
 
 
 
@@ -24,7 +24,7 @@ Raw data files are not included in this repository due to size constraints. Inst
 
 
 
-\### Data Access
+## Data Access
 
 
 
@@ -36,15 +36,15 @@ After download, raw HDF5 files should be placed in: data/raw/
 
 
 
----
+--
 
 
 
-\## Preprocessing and RFI Mitigation
+## Preprocessing and RFI Mitigation
 
 
 
-Raw spectrogram data are preprocessed to reduce instrumental artifacts and common sources of terrestrial radio-frequency interference (RFI).
+Raw spectrogram data are minimally preprocessed to reduce artifacts and common sources of terrestrial radio-frequency interference (RFI).
 
 
 
@@ -52,99 +52,71 @@ Preprocessing steps include:
 
 
 
-1\. \*\*Data loading\*\*
+1. Data loading
 
-&nbsp;  -  HDF5 files are loaded using the `blimpy` library.
+- HDF5 files are loaded using blimpy.
 
-&nbsp;  -  Spectrograms are extracted as 2D time–frequency arrays.
-
-
-
-2\. \*\*Baseline subtraction\*\*
-
-&nbsp;  -  A median value is subtracted along the time axis to suppress slowly varying backgrounds.
+-  Spectrograms are extracted as 2D time–frequency arrays.
 
 
 
-3\. \*\*Normalization\*\*
+2. Baseline subtraction
 
-&nbsp;  -  Spectrograms are normalized using robust statistics (median and standard deviation) to facilitate downstream ML training.
-
-
-
-4\. \*\*RFI masking\*\*
-
-&nbsp;  -  Frequency channels associated with known RFI bands are masked. (This is currently done minimally and needs to be edited by hand)
+-  The median value is subtracted along the time axis to suppress varying backgrounds.
 
 
 
-The result of this stage is a cleaned, normalized spectrogram suitable for tiling and feature extraction.
+3. Normalization
+
+-  Spectrograms are normalized using median and standard deviation for downstream ML training.
 
 
 
----
+4. RFI masking
+
+-  Frequency channels associated with known RFI bands are masked. (This is currently done minimally and needs to be edited by hand)
 
 
 
-\## Spectrogram Tiling and Dataset Construction
+The result of this stage is a cleaned, normalized spectrogram ready for tiling and feature extraction.
+
+
+
+--
+
+
+
+## Spectrogram Tiling and Dataset Construction
 
 
 
 To create CNN inputs, preprocessed spectrograms are divided into fixed-size tiles.
 
+-Tile size: 128 × 128 (time × frequency)
+-Overlap: default 50% - can be changed
+-Tiles with negligible variance or power are discarded to exclude masked regions
 
+Each tile is saved as a NumPy array and accompanied by metadata.
 
-* &nbsp;Tile size: 128 × 128 (time × frequency)
-* &nbsp;Overlap: default 50% - can be changed
-* &nbsp;Tiles with negligible variance or power are discarded
+This tiling process produces a dataset of spectrogram tiles/images suitable for CNN training and scoring.
 
-
-
-Each tile is saved as a NumPy array and accompanied by metadata describing its location in time and frequency space.
-
-This tiling process produces a dataset of spectrogram "images" suitable for convolutional neural networks (CNNs) and anomaly detection models.
-
-
-
----
+--
 
 
 
-\## Feature Extraction
+## Feature Extraction
 
-
-
-In addition to image-based representations, a set of signal features is saved for each spectrogram tile. 
-
-
+In addition to image-based representations, a set of features is saved for each tile. 
 
 Extracted features include:
 
-* Mean normalized power
-* Standard deviation 
-* Maximum normalized power 
-* Kurtosis 
-* Spectral entropy
+- Mean normalized power
+- Standard deviation 
+- Maximum normalized power 
+- Kurtosis 
+- Spectral entropy
 
-All extracted features are stored in tabular format and linked to their corresponding spectrogram tiles.
-
-
-
----
-
-
-
-\## Machine Learning Models
-
-
-
-\### CNN Embedding Model
-
-
-
-A small convolutional neural network is trained to map spectrogram tiles into a low-dimensional embedding space.
-
-These embeddings are used for visualization, clustering, and anomaly detection.
+All extracted features are stored in \data\features.npy.
 
 
 
@@ -152,19 +124,28 @@ These embeddings are used for visualization, clustering, and anomaly detection.
 
 
 
-\### Anomaly Detection
+## Machine Learning Models
+
+## CNN Embedding Model
+
+
+A small convolutional neural network is trained to map tiles into a low-dimensional embedding space.
+
+These embeddings are used for visualization, clustering, and signal detection.
+
+--
 
 
 
-Given the limited availability of labeled technosignature examples, anomaly detection is performed using unsupervised methods.
+## Anomaly Detection
 
-
+Anomaly detection is performed using unsupervised methods.
 
 Implemented approaches include:
 
-* &nbsp;Autoencoder reconstruction error
-* &nbsp;Distance-based outlier detection in embedding space
-* &nbsp;Feature-based anomaly scoring
+-Autoencoder reconstruction error
+-Distance-based outlier detection in embedding space
+-Feature-based anomaly scoring
 
 
 
@@ -176,7 +157,7 @@ The outputs of these methods are combined into a single anomaly score used to ra
 
 
 
-\## Synthetic Signal Injection
+## Synthetic Signal Injection
 
 
 
@@ -186,44 +167,38 @@ To evaluate the model sensitivity and validate the pipeline, synthetic signals a
 
 Injected signals vary in:
 
-* &nbsp;Signal-to-noise ratio
-* &nbsp;Frequency drift rate
-* &nbsp;Duration
-* &nbsp;Bandwidth
+-Signal-to-noise ratio
+-Frequency drift rate
+-Duration
+-Bandwidth
+
+
+--
 
 
 
-Recovery efficiency as a function of signal parameters is used as a basic performance metric.
+## Large Language Models as Reasoning Layers
 
 
 
----
+Large Language Models (LLMs) are evaluated as reasoning layers.
 
 
 
-\## Large Language Models as Reasoning Layers
+LLMs are given structured textual summaries of signal properties derived from the feature extraction stage. 
+For each candidate signal, an LLM is prompted to:
 
-
-
-Large Language Models (LLMs) are evaluated as \*\*interpretive reasoning layers\*\*, not as primary classifiers.
-
-
-
-LLMs operate on structured textual summaries of signal properties derived from the feature extraction stage. For each candidate signal, an LLM is prompted to:
-
-
-
-* &nbsp;Assess consistency with known RFI or astrophysical phenomena
-* &nbsp;Evaluate alignment with common technosignature heuristics
-* &nbsp;Provide an explanation of its reasoning
+-Assess consistency with known RFI or astrophysical phenomena
+-Evaluate alignment with common technosignature heuristics (needs to be specified in script)
+-Provide an explanation of its reasoning
 
 
 
 Both commercial and open-source LLMs are evaluated for:
 
-* &nbsp;Consistency
-* &nbsp;Agreement with heuristic expectations
-* &nbsp;Completeness of explanations
+-Consistency
+-Agreement with heuristic expectations
+-Completeness of explanations
 
 
 
@@ -231,7 +206,7 @@ Both commercial and open-source LLMs are evaluated for:
 
 
 
-\## Evaluation and Limitations
+## Evaluation and Limitations
 
 
 
@@ -243,16 +218,16 @@ This is, again, a rough toy-model that is in dire need of optimization at every 
 
 
 
-\## Future Work
+## Future Work
 
 
 
 In addition to optimizing the current pipeline, other extensions include:
 
-* &nbsp;Compatibility with more LLMs
-* &nbsp;LLM Fine-Tuning
-* &nbsp;Application to interferometric datasets (e.g., ATA, VLA, MeerKAT)
-* &nbsp;Real-time inference optimization (e.g., TensorRT)
+-Compatibility with more LLMs
+-LLM Fine-Tuning
+-Application to interferometric datasets (e.g., ATA, VLA, MeerKAT)
+-Real-time inference optimization (e.g., TensorRT)
 
 
 
